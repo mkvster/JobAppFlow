@@ -1,0 +1,27 @@
+# Build artifacts
+bin/
+obj/
+publish/
+wwwroot/
+
+# .NET local tools / generated config
+**/.config/dotnet-tools.json
+
+# Local launch profiles
+**/Properties/launchSettings.json
+
+# User-specific files
+*.user
+*.suo
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# Secrets and local configs
+appsettings.Production.json
+appsettings.Development.json
+appsettings.Local.json
+appsettings.test.json
+*.Secrets.json
