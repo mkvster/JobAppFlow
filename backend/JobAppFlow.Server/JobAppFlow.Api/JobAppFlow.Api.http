@@ -1,0 +1,5 @@
+@JobAppFlow.Api_HostAddress = http://localhost:5294
+
+GET {{JobAppFlow.Api_HostAddress}}/health
+
+###

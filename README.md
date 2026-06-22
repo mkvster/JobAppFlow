@@ -63,6 +63,18 @@ docs/roadmap.md
 docs/sprints/
 ```
 
+## Solution Format
+
+JobAppFlow uses the `.slnx` solution format.
+
+The project targets .NET 10 and Visual Studio 2026, so the repository does not keep a legacy `.sln` file.
+
+Build the solution with:
+
+```bash
+dotnet build JobAppFlow.slnx
+```
+
 ## Deployment Direction
 
 The initial backend deployment target is Azure App Service Linux.
