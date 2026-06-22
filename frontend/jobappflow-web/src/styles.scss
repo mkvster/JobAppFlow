@@ -1,0 +1,115 @@
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  color: #f5f7fb;
+  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  overflow-x: hidden;
+  background: #09101b;
+}
+
+:root {
+  --app-shell-bg:
+    radial-gradient(circle at top left, rgba(87, 171, 255, 0.28), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(56, 205, 164, 0.18), transparent 28%),
+    linear-gradient(160deg, #07111f 0%, #0c1728 48%, #09101b 100%);
+  --app-panel-bg: rgba(10, 18, 31, 0.78);
+  --app-panel-border: rgba(255, 255, 255, 0.12);
+  --app-panel-shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
+  --app-panel-radius: 24px;
+  --app-text-muted: #bfd0ea;
+  --app-text-subtle: #8ea6c9;
+  --app-ok: #5df0b5;
+  --app-bad: #ff8e8e;
+  --app-loading: #d6e2ff;
+  --app-button-bg: linear-gradient(135deg, #56a7ff 0%, #4cd6a4 100%);
+  --app-button-text: #06111e;
+}
+
+.app-shell {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--app-shell-bg);
+}
+
+.app-panel {
+  width: min(100%, 560px);
+  border: 1px solid var(--app-panel-border);
+  border-radius: var(--app-panel-radius);
+  padding: 32px;
+  background: var(--app-panel-bg);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--app-panel-shadow);
+}
+
+.app-panel.is-ok {
+  border-color: rgba(68, 214, 157, 0.35);
+}
+
+.app-panel.is-bad {
+  border-color: rgba(255, 122, 122, 0.35);
+}
+
+.app-eyebrow {
+  margin: 0 0 10px;
+  color: var(--app-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.75rem;
+}
+
+.app-title {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  line-height: 1.02;
+}
+
+.app-status {
+  margin: 18px 0 8px;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.app-status--loading {
+  color: var(--app-loading);
+}
+
+.app-status--ok {
+  color: var(--app-ok);
+}
+
+.app-status--bad {
+  color: var(--app-bad);
+}
+
+.app-copy,
+.app-meta {
+  margin: 0 0 12px;
+  color: var(--app-text-muted);
+  line-height: 1.5;
+}
+
+.app-meta code {
+  color: #f5f7fb;
+  word-break: break-all;
+}
+
+.app-button {
+  margin-top: 8px;
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  background: var(--app-button-bg);
+  color: var(--app-button-text);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.app-button:hover {
+  filter: brightness(1.03);
+}

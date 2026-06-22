@@ -1,0 +1,23 @@
+<main class="app-shell">
+  <section
+    class="app-panel"
+    [class.is-ok]="status() === 'healthy'"
+    [class.is-bad]="status() === 'unhealthy'"
+  >
+    <p class="app-eyebrow">JobAppFlow</p>
+    <h1 class="app-title">{{ title() }} health</h1>
+
+    @if (status() === 'loading') {
+      <p class="app-status app-status--loading">Checking backend health...</p>
+    } @else if (status() === 'healthy') {
+      <p class="app-status app-status--ok">Online</p>
+    } @else {
+      <p class="app-status app-status--bad">Offline</p>
+    }
+
+    <p class="app-copy">{{ details() }}</p>
+    <p class="app-meta" *ngIf="lastChecked()">Last checked: {{ lastChecked() }}</p>
+
+    <button type="button" class="app-button" (click)="refreshHealth()">Recheck</button>
+  </section>
+</main>
