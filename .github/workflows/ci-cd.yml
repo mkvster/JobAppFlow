@@ -1,0 +1,125 @@
+name: JobAppFlow CI/CD
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/ci-cd.yml'
+
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/ci-cd.yml'
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  SOLUTION_PATH: 'backend/JobAppFlow.Server/JobAppFlow.Server.slnx'
+  API_PROJECT_PATH: 'backend/JobAppFlow.Server/JobAppFlow.Api/JobAppFlow.Api.csproj'
+  PUBLISH_DIR: '${{ github.workspace }}/publish/backend'
+
+jobs:
+  build-test:
+    name: Build and test backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION_PATH }}
+
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test ${{ env.SOLUTION_PATH }} --configuration Release --no-build
+
+      - name: Publish API
+        if: github.event_name == 'push'
+        run: dotnet publish ${{ env.API_PROJECT_PATH }} --configuration Release --no-build --output ${{ env.PUBLISH_DIR }}
+
+      - name: Upload backend artifact
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-publish
+          path: ${{ env.PUBLISH_DIR }}
+
+  deploy:
+    name: Deploy backend to Azure App Service
+    runs-on: ubuntu-latest
+    needs: build-test
+    if: github.event_name == 'push'
+
+    environment:
+      name: production
+      url: ${{ vars.AZURE_WEBAPP_URL }}
+
+    steps:
+      - name: Download backend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-publish
+          path: ./publish/backend
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ vars.AZURE_WEBAPP_NAME }}
+          package: ./publish/backend
+
+      - name: Smoke test health endpoint
+        shell: bash
+        run: |
+          url="${{ vars.AZURE_WEBAPP_URL }}"
+          url="${url%/}/health"
+
+          for attempt in $(seq 1 12); do
+            if [ "$(curl --fail --show-error --silent "$url" || true)" = "Healthy" ]; then
+              echo "Health check passed: $url"
+              exit 0
+            fi
+
+            echo "Health check failed on attempt $attempt/12. Retrying in 10 seconds..."
+            sleep 10
+          done
+
+          echo "Health check did not pass after deployment: $url"
+          exit 1
+
+  backend_ready:
+    name: Backend ready signal
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: success() && github.event_name == 'push'
+    outputs:
+      ready: ${{ steps.signal.outputs.ready }}
+      url: ${{ steps.signal.outputs.url }}
+
+    steps:
+      - id: signal
+        shell: bash
+        run: |
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+          echo "url=${{ vars.AZURE_WEBAPP_URL }}" >> "$GITHUB_OUTPUT"
