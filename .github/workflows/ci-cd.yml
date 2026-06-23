@@ -1,3 +1,10 @@
+# Standard monorepo release pattern:
+# - PR: build/test only, no deploy
+# - push to main:
+#   - deploy backend first if backend changed
+#   - backend must pass /health before frontend deploy
+#   - frontend-only changes deploy frontend without backend deploy
+# This prevents a new frontend from reaching production before its matching backend.
 name: JobAppFlow CI/CD
 
 on:
@@ -22,16 +29,20 @@ permissions:
   contents: read
 
 env:
+  # Backend configuration
   DOTNET_VERSION: '10.0.x'
   SOLUTION_PATH: 'backend/JobAppFlow.Server/JobAppFlow.Server.slnx'
   API_PROJECT_PATH: 'backend/JobAppFlow.Server/JobAppFlow.Api/JobAppFlow.Api.csproj'
   PUBLISH_DIR: '${{ github.workspace }}/publish/backend'
 
+  # Frontend configuration
   NODE_VERSION: '24'
   FRONTEND_APP_PATH: 'frontend/jobappflow-web'
   FRONTEND_DIST_PATH: 'frontend/jobappflow-web/dist/jobappflow-web/browser'
 
 jobs:
+  # Treat workflow changes as affecting both backend and frontend.
+  # This intentionally runs the full CI/CD path on push to main so pipeline changes are validated.
   detect_changes:
     name: Detect changed areas
     runs-on: ubuntu-latest
@@ -60,6 +71,7 @@ jobs:
             head_sha="${{ github.sha }}"
           fi
 
+          # Fallback when base_sha is empty or all zeros
           if [ -z "$base_sha" ] || [[ "$base_sha" =~ ^0+$ ]]; then
             if git rev-parse "${head_sha}^" >/dev/null 2>&1; then
               base_sha="$(git rev-parse "${head_sha}^")"
@@ -72,12 +84,23 @@ jobs:
 
           backend_changed=false
           frontend_changed=false
+          workflow_changed=false
 
           if echo "$changed_files" | grep -q '^backend/'; then
             backend_changed=true
           fi
 
           if echo "$changed_files" | grep -q '^frontend/'; then
+            frontend_changed=true
+          fi
+
+          if echo "$changed_files" | grep -q '^\.github/workflows/ci-cd.yml$'; then
+            workflow_changed=true
+          fi
+
+          # Re-run the full pipeline when the workflow changes
+          if [ "$workflow_changed" = "true" ]; then
+            backend_changed=true
             frontend_changed=true
           fi
 
@@ -170,23 +193,44 @@ jobs:
           echo "Health check did not pass after deployment: $url"
           exit 1
 
-  backend_ready:
-    name: Backend ready signal
+  # Gate for frontend deployment.
+  # If backend changed in this release, backend deploy must have succeeded.
+  # If backend did not change, the gate passes immediately.
+  # This avoids blocking frontend-only releases while protecting combined backend+frontend releases.
+  backend_gate:
+    name: Backend deployment gate
     runs-on: ubuntu-latest
     needs:
       - detect_changes
       - deploy
-    if: success() && github.event_name == 'push' && needs.detect_changes.outputs.backend_changed == 'true'
+    if: ${{ always() && !cancelled() && github.event_name == 'push' }}
     outputs:
-      ready: ${{ steps.signal.outputs.ready }}
-      url: ${{ steps.signal.outputs.url }}
+      ready: ${{ steps.gate.outputs.ready }}
 
     steps:
-      - id: signal
+      - id: gate
         shell: bash
         run: |
-          echo "ready=true" >> "$GITHUB_OUTPUT"
-          echo "url=${{ vars.AZURE_WEBAPP_URL }}" >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+
+          backend_changed="${{ needs.detect_changes.outputs.backend_changed }}"
+          deploy_result="${{ needs.deploy.result }}"
+
+          if [ "$backend_changed" != "true" ]; then
+            echo "Backend did not change. Gate passed."
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "$deploy_result" = "success" ]; then
+            echo "Backend changed and deployed successfully. Gate passed."
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Backend changed but deployment did not succeed. Gate failed."
+          echo "Backend deploy result: $deploy_result"
+          exit 1
 
   frontend-build:
     name: Build frontend
@@ -209,12 +253,12 @@ jobs:
         shell: bash
         working-directory: ${{ env.FRONTEND_APP_PATH }}
         run: |
-          cat > src/environments/environment.ts <<EOF
-          export const environment = {
-            production: true,
-            backendBaseUrl: "${{ vars.AZURE_WEBAPP_URL }}"
-          };
-          EOF
+          printf '%s\n' \
+            'export const environment = {' \
+            '  production: true,' \
+            '  backendBaseUrl: "${{ vars.AZURE_WEBAPP_URL }}"' \
+            '};' \
+            > src/environments/environment.ts
 
       - name: Install frontend dependencies
         working-directory: ${{ env.FRONTEND_APP_PATH }}
@@ -235,13 +279,17 @@ jobs:
           name: frontend-dist
           path: ${{ env.FRONTEND_DIST_PATH }}
 
+  # Frontend deploy always waits for backend_gate.
+  # For frontend-only changes, backend_gate passes immediately.
+  # For backend+frontend changes, backend_gate waits for successful backend deploy + health check.
   deploy_frontend:
     name: Deploy frontend to Azure Static Web Apps
     runs-on: ubuntu-latest
     needs:
       - detect_changes
       - frontend-build
-    if: github.event_name == 'push' && needs.detect_changes.outputs.frontend_changed == 'true'
+      - backend_gate
+    if: ${{ github.event_name == 'push' && needs.detect_changes.outputs.frontend_changed == 'true' && needs.backend_gate.outputs.ready == 'true' }}
     outputs:
       static_web_app_url: ${{ steps.deploy.outputs.static_web_app_url }}
 
@@ -267,8 +315,9 @@ jobs:
           output_location: ''
           skip_app_build: true
 
-  frontend_ready:
-    name: Frontend ready signal
+  # Final smoke check after frontend deploy.
+  final_verification:
+    name: Verify released app
     runs-on: ubuntu-latest
     needs:
       - detect_changes
@@ -280,7 +329,19 @@ jobs:
         shell: bash
         run: |
           url="${{ needs.deploy_frontend.outputs.static_web_app_url }}"
-          curl --fail --show-error --silent "${url%/}/" >/dev/null
+
+          for attempt in $(seq 1 12); do
+            if curl --fail --show-error --silent "${url%/}/" >/dev/null; then
+              echo "Frontend is reachable."
+              exit 0
+            fi
+
+            echo "Frontend not ready yet. Attempt $attempt/12. Retrying in 10 seconds..."
+            sleep 10
+          done
+
+          echo "Frontend did not become reachable in time."
+          exit 1
 
       - name: Verify backend health from release flow
         shell: bash
