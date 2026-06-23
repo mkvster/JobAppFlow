@@ -34,6 +34,7 @@ env:
   SOLUTION_PATH: 'backend/JobAppFlow.Server/JobAppFlow.Server.slnx'
   API_PROJECT_PATH: 'backend/JobAppFlow.Server/JobAppFlow.Api/JobAppFlow.Api.csproj'
   PUBLISH_DIR: '${{ github.workspace }}/publish/backend'
+  BACKEND_DEPLOY_EXCLUDED_PATHS: '^backend/Database/|^backend/JobAppFlow\.Server/Tools/|^backend/JobAppFlow\.Server/Tests/'
 
   # Frontend configuration
   NODE_VERSION: '24'
@@ -49,6 +50,7 @@ jobs:
 
     outputs:
       backend_changed: ${{ steps.filter.outputs.backend_changed }}
+      backend_deploy_changed: ${{ steps.filter.outputs.backend_deploy_changed }}
       frontend_changed: ${{ steps.filter.outputs.frontend_changed }}
 
     steps:
@@ -83,11 +85,16 @@ jobs:
           changed_files="$(git diff --name-only "$base_sha" "$head_sha")"
 
           backend_changed=false
+          backend_deploy_changed=false
           frontend_changed=false
           workflow_changed=false
 
           if echo "$changed_files" | grep -q '^backend/'; then
             backend_changed=true
+          fi
+
+          if echo "$changed_files" | grep -Evq "$BACKEND_DEPLOY_EXCLUDED_PATHS" && echo "$changed_files" | grep -q '^backend/'; then
+            backend_deploy_changed=true
           fi
 
           if echo "$changed_files" | grep -q '^frontend/'; then
@@ -101,10 +108,12 @@ jobs:
           # Re-run the full pipeline when the workflow changes
           if [ "$workflow_changed" = "true" ]; then
             backend_changed=true
+            backend_deploy_changed=true
             frontend_changed=true
           fi
 
           echo "backend_changed=$backend_changed" >> "$GITHUB_OUTPUT"
+          echo "backend_deploy_changed=$backend_deploy_changed" >> "$GITHUB_OUTPUT"
           echo "frontend_changed=$frontend_changed" >> "$GITHUB_OUTPUT"
 
   build-test:
@@ -148,7 +157,7 @@ jobs:
     needs:
       - detect_changes
       - build-test
-    if: github.event_name == 'push' && needs.detect_changes.outputs.backend_changed == 'true'
+    if: github.event_name == 'push' && needs.detect_changes.outputs.backend_deploy_changed == 'true'
 
     environment:
       name: production
@@ -194,8 +203,8 @@ jobs:
           exit 1
 
   # Gate for frontend deployment.
-  # If backend changed in this release, backend deploy must have succeeded.
-  # If backend did not change, the gate passes immediately.
+  # If backend code changed in this release, backend deploy must have succeeded.
+  # If only backend non-runtime files changed, the gate passes immediately.
   # This avoids blocking frontend-only releases while protecting combined backend+frontend releases.
   backend_gate:
     name: Backend deployment gate
@@ -213,22 +222,22 @@ jobs:
         run: |
           set -euo pipefail
 
-          backend_changed="${{ needs.detect_changes.outputs.backend_changed }}"
+          backend_deploy_changed="${{ needs.detect_changes.outputs.backend_deploy_changed }}"
           deploy_result="${{ needs.deploy.result }}"
 
-          if [ "$backend_changed" != "true" ]; then
-            echo "Backend did not change. Gate passed."
+          if [ "$backend_deploy_changed" != "true" ]; then
+            echo "Backend did not change in a deploy-worthy way. Gate passed."
             echo "ready=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           if [ "$deploy_result" = "success" ]; then
-            echo "Backend changed and deployed successfully. Gate passed."
+            echo "Backend changed in a deploy-worthy way and deployed successfully. Gate passed."
             echo "ready=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          echo "Backend changed but deployment did not succeed. Gate failed."
+          echo "Backend changed in a deploy-worthy way but deployment did not succeed. Gate failed."
           echo "Backend deploy result: $deploy_result"
           exit 1
 

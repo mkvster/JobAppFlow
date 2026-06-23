@@ -29,7 +29,7 @@ AI may assist with updating C# code after a database script changes, but AI does
 Database scripts are stored in the repository under:
 
 ```text
-backend/database
+backend/Database/SqlServer
 ```
 
 Each script should describe an intentional database change.

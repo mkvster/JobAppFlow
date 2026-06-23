@@ -2,5 +2,8 @@
   <Folder Name="/Tests/">
     <Project Path="Tests/JobAppFlow.Api.Tests/JobAppFlow.Api.Tests.csproj" />
   </Folder>
+  <Folder Name="/Tools/">
+    <Project Path="Tools/JobAppFlow.Tools.IdentitySchemaGenerator/JobAppFlow.Tools.IdentitySchemaGenerator.csproj" />
+  </Folder>
   <Project Path="JobAppFlow.Api/JobAppFlow.Api.csproj" />
 </Solution>
