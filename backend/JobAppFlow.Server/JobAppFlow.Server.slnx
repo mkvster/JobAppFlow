@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Libraries/">
+    <Project Path="Libraries/JobAppFlow.SqlDataAccess/JobAppFlow.SqlDataAccess.csproj" Id="98b45f2b-1c1c-4c79-9ade-f2d8e1c8dcaa" />
+  </Folder>
   <Folder Name="/Tests/">
     <Project Path="Tests/JobAppFlow.Api.Tests/JobAppFlow.Api.Tests.csproj" />
   </Folder>
