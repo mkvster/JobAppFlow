@@ -1,7 +1,7 @@
 using JobAppFlow.Tools.IdentitySchemaGenerator;
-using JobAppFlow.Tools.IdentitySchemaGenerator.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using GuidIdentityDbContext = JobAppFlow.Tools.IdentitySchemaGenerator.BaseIdentityDbContext<System.Guid>;
 
 var configuration = new ConfigurationBuilder()
     .SetBasePath(AppContext.BaseDirectory)
@@ -9,8 +9,8 @@ var configuration = new ConfigurationBuilder()
     .Build();
 
 var generationOptions = configuration
-    .GetRequiredSection(IdentitySchemaGenerationOptions.SectionName)
-    .Get<IdentitySchemaGenerationOptions>()
+    .GetRequiredSection(OutputOptions.SectionName)
+    .Get<OutputOptions>()
     ?? throw new InvalidOperationException("Missing identity schema generation options.");
 
 var outputPath = ResolveOutputPath(args, generationOptions);
@@ -23,11 +23,11 @@ var outputPath = ResolveOutputPath(args, generationOptions);
 // introducing environment-specific settings into the repository.
 const string fakeConnectionString = "Server=(localdb)\\MSSQLLocalDB;Database=_;Trusted_Connection=True;TrustServerCertificate=True";
 
-var options = new DbContextOptionsBuilder<JobAppFlowIdentityDbContext>()
+var options = new DbContextOptionsBuilder<GuidIdentityDbContext>()
     .UseSqlServer(fakeConnectionString)
     .Options;
 
-using var db = new JobAppFlowIdentityDbContext(options);
+using var db = new GuidIdentityDbContext(options);
 var sql = db.Database.GenerateCreateScript();
 
 Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
@@ -35,7 +35,7 @@ File.WriteAllText(outputPath, sql);
 
 Console.WriteLine($"Identity schema generated: {outputPath}");
 
-static string ResolveOutputPath(string[] args, IdentitySchemaGenerationOptions options)
+static string ResolveOutputPath(string[] args, OutputOptions options)
 {
     if (args.Length >= 2 && args[0].Equals("--output", StringComparison.OrdinalIgnoreCase))
     {
