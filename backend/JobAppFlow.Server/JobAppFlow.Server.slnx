@@ -6,6 +6,7 @@
     <Project Path="Tests/JobAppFlow.Api.Tests/JobAppFlow.Api.Tests.csproj" />
   </Folder>
   <Folder Name="/Tools/">
+    <Project Path="Tools/JobAppFlow.Tools.AdminCli/JobAppFlow.Tools.AdminCli.csproj" Id="d059e615-0d2b-49d9-b6ab-9c39b4ce42ad" />
     <Project Path="Tools/JobAppFlow.Tools.IdentitySchemaGenerator/JobAppFlow.Tools.IdentitySchemaGenerator.csproj" />
   </Folder>
   <Project Path="JobAppFlow.Api/JobAppFlow.Api.csproj" />
