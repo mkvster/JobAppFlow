@@ -91,11 +91,13 @@ public sealed class AdminCliApp
         command.Add(emailOption);
         command.SetAction(async parseResult =>
         {
-            var login = parseResult.GetRequiredValue(loginOption);
-            var password = parseResult.GetRequiredValue(passwordOption);
-            var email = parseResult.GetRequiredValue(emailOption);
-            await _processor.AddUserAsync(new AddUserRequest(login, password, email));
-            return 0;
+            return await ExecuteCommandAsync(async () =>
+            {
+                var login = parseResult.GetRequiredValue(loginOption);
+                var password = parseResult.GetRequiredValue(passwordOption);
+                var email = parseResult.GetRequiredValue(emailOption);
+                await _processor.AddUserAsync(new AddUserRequest(login, password, email));
+            });
         });
 
         return command;
@@ -113,9 +115,11 @@ public sealed class AdminCliApp
         command.Add(loginOption);
         command.SetAction(async parseResult =>
         {
-            var login = parseResult.GetRequiredValue(loginOption);
-            await _processor.RemoveUserAsync(new RemoveUserRequest(login));
-            return 0;
+            return await ExecuteCommandAsync(async () =>
+            {
+                var login = parseResult.GetRequiredValue(loginOption);
+                await _processor.RemoveUserAsync(new RemoveUserRequest(login));
+            });
         });
 
         return command;
@@ -133,9 +137,11 @@ public sealed class AdminCliApp
         command.Add(loginOption);
         command.SetAction(async parseResult =>
         {
-            var login = parseResult.GetRequiredValue(loginOption);
-            await _processor.BanUserAsync(new BanUserRequest(login));
-            return 0;
+            return await ExecuteCommandAsync(async () =>
+            {
+                var login = parseResult.GetRequiredValue(loginOption);
+                await _processor.BanUserAsync(new BanUserRequest(login));
+            });
         });
 
         return command;
@@ -153,11 +159,27 @@ public sealed class AdminCliApp
         command.Add(loginOption);
         command.SetAction(async parseResult =>
         {
-            var login = parseResult.GetRequiredValue(loginOption);
-            await _processor.UnbanUserAsync(new UnbanUserRequest(login));
-            return 0;
+            return await ExecuteCommandAsync(async () =>
+            {
+                var login = parseResult.GetRequiredValue(loginOption);
+                await _processor.UnbanUserAsync(new UnbanUserRequest(login));
+            });
         });
 
         return command;
+    }
+
+    private static async Task<int> ExecuteCommandAsync(Func<Task> action)
+    {
+        try
+        {
+            await action();
+            return 0;
+        }
+        catch (Exception exception)
+        {
+            Console.Error.WriteLine(exception);
+            throw;
+        }
     }
 }

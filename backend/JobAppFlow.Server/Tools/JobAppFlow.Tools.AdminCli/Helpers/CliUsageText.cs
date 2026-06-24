@@ -12,8 +12,8 @@ Usage:
   jaf db -unban-user -login <login>
 
 Notes:
-  - The current build only parses commands and dispatches handlers.
-  - Database ORM wiring will be added in a later branch.
+  - Commands are executed against the configured SQL Server identity store.
+  - Connection string: ConnectionStrings:JobAppFlowDb.
 """;
 
     public static string Database() => """
