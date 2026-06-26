@@ -7,10 +7,10 @@
 
 [x] `0008_local-db-identity-tables`
 [x] `0012_backend-add-identity-db`
-[d] `0009_cli-admin-db`
-[ ] `0010_azure-data-and-observability`
-[ ] `0011_azure-sql-setup`
-[ ] `0014_auth-model-foundation`
+[x] `0009_cli-admin-db`
+[x] `0010_azure-data-and-observability`
+[x] `0011_azure-sql-setup`
+[x] `0014_auth-model-foundation`
 [ ] `0015_auth-endpoints`
 [ ] `0016_login-ui`
 
@@ -18,9 +18,9 @@
 
 [ ] Database and auth delivery:
 
-- [ ] local and Azure identity tables setup;
-- [ ] CLI admin tooling;
-- [ ] backend database wiring;
+- [x] local and Azure identity tables setup;
+- [x] CLI admin tooling;
+- [x] backend database wiring;
 - [ ] auth model and endpoints;
 - [ ] login UI.
 
