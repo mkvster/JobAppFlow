@@ -1,4 +1,4 @@
-﻿using JobAppFlow.SqlDataAccess.Models;
+using JobAppFlow.SqlDataAccess.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -14,8 +14,10 @@ public sealed class JobAppFlowDbContext
         IdentityUserRole<Guid>,
         IdentityUserLogin<Guid>,
         IdentityRoleClaim<Guid>,
-        IdentityUserToken<Guid>> {
+        IdentityUserToken<Guid>>
+{
     public JobAppFlowDbContext(DbContextOptions<JobAppFlowDbContext> options)
-        : base(options) {
+        : base(options)
+    {
     }
 }

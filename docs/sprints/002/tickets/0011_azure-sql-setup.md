@@ -2,13 +2,20 @@
 
 ## Description
 
-Create Azure SQL Database and apply the database scripts accumulated up to this point.
-After the database is ready, use the admin CLI to register the local development users `owner`, `tester`, and `demo`.
+Apply the current database scripts to Azure SQL Database.
+
+After the database schema is ready, configure the admin CLI to connect to Azure SQL Database and use it to register:
+
+* a private administrator account defined in local configuration;
+* the `tester` development account;
+* the `demo` account.
 
 ## Acceptance
 
 - Azure SQL Database exists.
 - The current database scripts are applied to Azure SQL Database.
 - The admin CLI can connect to Azure SQL Database.
-- The admin CLI can register `owner`, `tester`, and `demo` users.
+- The admin CLI can register an administrator account using values from local configuration.
+- The admin CLI can register the `tester` and `demo` users.
 - The Azure database is ready for the backend to use.
+

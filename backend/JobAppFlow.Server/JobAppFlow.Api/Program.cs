@@ -1,25 +1,33 @@
+using JobAppFlow.Api.Installers;
+using JobAppFlow.SqlDataAccess.Extensions;
+
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddProblemDetails();
+builder.Services.AddControllers();
 
-var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? [
-        "http://localhost:4200",
-        "http://127.0.0.1:4200"
-    ];
+builder.Services.AddJobAppFlowSqlDataAccess(builder.Configuration);
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("Frontend", policy =>
-    {
-        policy.WithOrigins(allowedOrigins)
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
-});
+var features = new FeatureInstallerCollection(
+    new CorsInstaller(),
+    new JwtAuthInstaller(),
+    new SwaggerInstaller(),
+    new ApplicationInsightsInstaller()
+);
+
+features.ConfigureBuilder(builder);
 
 var app = builder.Build();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler();
+    app.UseHttpsRedirection();
+    app.UseHsts();
+}
+app.UseStatusCodePages();
 
-app.UseCors("Frontend");
+features.ConfigureApp(app);
 
+app.MapControllers();
 app.MapGet("/health", () => Results.Text("Healthy"));
 
 app.Run();

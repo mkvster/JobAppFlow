@@ -2,13 +2,21 @@
 
 ## Description
 
-Lay the foundation for authentication using ASP.NET Core Identity, JWT access tokens, and refresh tokens.
-The model should be suitable for a personal application with owner and demo access patterns.
+Prepare the API authentication foundation for the next auth endpoints implementation.
+
+This ticket establishes the backend wiring for:
+
+- ASP.NET Core Identity integration;
+- JWT authentication configuration for access tokens;
+- JWT refresh token configuration;
+- application settings for auth and secret values;
+- Application Insights configuration for the API;
 
 ## Acceptance
 
-- ASP.NET Core Identity is part of the authentication foundation.
-- JWT access tokens are part of the authentication foundation.
-- Refresh tokens are part of the authentication foundation.
-- The authentication model supports owner and demo account patterns.
-
+- API is wired to the DataAccess.
+- ASP.NET Core Identity is configured in the API authentication pipeline.
+- JWT authentication is configured for the API.
+- Refresh token generation is available for the API layer.
+- Auth-related configuration values are loaded from application settings and environment variables.
+- Application Insights is configured for the API.

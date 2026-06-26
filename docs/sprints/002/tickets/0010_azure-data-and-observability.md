@@ -7,7 +7,10 @@ Set up the Azure resources that support application data and observability.
 Create the following Azure resources manually:
 
 - Azure SQL Database;
-- Azure Application Insights, if included at this stage.
+- Azure Application Insights;
+- Log Analytics Workspace for Application Insights, if required by Azure.
+
+Configure the backend App Service to use these resources (sqldb connection string + appi connection string).
 
 ## Acceptance
 
