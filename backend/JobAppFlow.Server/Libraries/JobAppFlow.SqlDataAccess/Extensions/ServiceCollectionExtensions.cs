@@ -28,6 +28,12 @@ public static class ServiceCollectionExtensions
 
         services.AddDbContext<JobAppFlowDbContext>(options =>
         {
+            if (IsSqliteConnectionString(connectionString))
+            {
+                options.UseSqlite(connectionString);
+                return;
+            }
+
             options.UseSqlServer(connectionString, sqlServerOptions =>
             {
                 sqlServerOptions.EnableRetryOnFailure(maxRetryCount: 2);
@@ -51,5 +57,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserAdministrationService, UserAdministrationService>();
 
         return services;
+    }
+
+    private static bool IsSqliteConnectionString(string connectionString)
+    {
+        return connectionString.Contains("Data Source=", StringComparison.OrdinalIgnoreCase)
+            && !connectionString.Contains("Server=", StringComparison.OrdinalIgnoreCase)
+            && !connectionString.Contains("Data Source=.", StringComparison.OrdinalIgnoreCase);
     }
 }

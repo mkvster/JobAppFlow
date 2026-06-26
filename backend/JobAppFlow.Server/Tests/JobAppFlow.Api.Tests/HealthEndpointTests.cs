@@ -1,17 +1,20 @@
 using System.Net;
-using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace JobAppFlow.Api.Tests;
 
-public class HealthEndpointTests : IClassFixture<WebApplicationFactory<Program>> {
+[Collection(IntegrationTestCollectionDefinition.Name)]
+public sealed class HealthEndpointTests
+{
     private readonly HttpClient _client;
 
-    public HealthEndpointTests(WebApplicationFactory<Program> factory) {
-        _client = factory.CreateClient();
+    public HealthEndpointTests(IntegrationTestFixture fixture)
+    {
+        _client = fixture.CreateClient();
     }
 
     [Fact]
-    public async Task GetHealth_ReturnsSuccess() {
+    public async Task GetHealth_ReturnsSuccess()
+    {
         var response = await _client.GetAsync("/health");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

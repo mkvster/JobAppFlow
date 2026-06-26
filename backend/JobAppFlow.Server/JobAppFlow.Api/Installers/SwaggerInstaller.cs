@@ -1,5 +1,4 @@
 using Microsoft.OpenApi;
-
 namespace JobAppFlow.Api.Installers;
 
 public sealed class SwaggerInstaller : IFeatureInstaller
@@ -29,13 +28,14 @@ public sealed class SwaggerInstaller : IFeatureInstaller
                 Description = "Enter JWT token only"
             });
 
-            options.AddSecurityRequirement(_ => new OpenApiSecurityRequirement
+            options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
             {
                 {
-                    new OpenApiSecuritySchemeReference("Bearer", null, null),
+                    new OpenApiSecuritySchemeReference("Bearer", document, null),
                     new List<string>()
                 }
             });
+
         });
     }
 
@@ -44,7 +44,11 @@ public sealed class SwaggerInstaller : IFeatureInstaller
         if (app.ApplicationServices.GetRequiredService<IHostEnvironment>().IsDevelopment())
         {
             app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "JobAppFlow API v1");
+                options.RoutePrefix = string.Empty;
+            });
         }
     }
 }
