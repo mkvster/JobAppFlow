@@ -61,7 +61,7 @@ public sealed class LoginAttemptProtectionServiceTests
     private static InMemoryLoginAttemptProtectionService CreateService(FakeTimeProvider clock)
     {
         return new InMemoryLoginAttemptProtectionService(
-            new LoginProtectionOptions(),
+            new AuthOptions(),
             clock);
     }
 
