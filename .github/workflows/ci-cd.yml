@@ -16,6 +16,19 @@ on:
       - 'frontend/**'
       - '.github/workflows/ci-cd.yml'
 
+  workflow_dispatch:
+    inputs:
+      force_backend:
+        description: 'Redeploy backend during this manual run'
+        required: false
+        type: boolean
+        default: false
+      force_frontend:
+        description: 'Redeploy frontend during this manual run'
+        required: false
+        type: boolean
+        default: true
+
   push:
     branches:
       - main
@@ -64,6 +77,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            backend_changed="${{ inputs.force_backend }}"
+            backend_deploy_changed="${{ inputs.force_backend }}"
+            frontend_changed="${{ inputs.force_frontend }}"
+            echo "backend_changed=$backend_changed" >> "$GITHUB_OUTPUT"
+            echo "backend_deploy_changed=$backend_deploy_changed" >> "$GITHUB_OUTPUT"
+            echo "frontend_changed=$frontend_changed" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             base_sha="${{ github.event.pull_request.base.sha }}"
@@ -141,11 +164,11 @@ jobs:
         run: dotnet test ${{ env.SOLUTION_PATH }} --configuration Release --no-build
 
       - name: Publish API
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: dotnet publish ${{ env.API_PROJECT_PATH }} --configuration Release --no-build --output ${{ env.PUBLISH_DIR }}
 
       - name: Upload backend artifact
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: backend-publish
@@ -157,7 +180,7 @@ jobs:
     needs:
       - detect_changes
       - build-test
-    if: github.event_name == 'push' && needs.detect_changes.outputs.backend_deploy_changed == 'true'
+    if: github.event_name != 'pull_request' && needs.detect_changes.outputs.backend_deploy_changed == 'true'
 
     environment:
       name: production
@@ -212,7 +235,7 @@ jobs:
     needs:
       - detect_changes
       - deploy
-    if: ${{ always() && !cancelled() && github.event_name == 'push' }}
+    if: ${{ always() && !cancelled() && github.event_name != 'pull_request' }}
     outputs:
       ready: ${{ steps.gate.outputs.ready }}
 
@@ -282,7 +305,7 @@ jobs:
         run: npm run build -- --configuration production
 
       - name: Upload frontend artifact
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
@@ -298,7 +321,7 @@ jobs:
       - detect_changes
       - frontend-build
       - backend_gate
-    if: ${{ github.event_name == 'push' && needs.detect_changes.outputs.frontend_changed == 'true' && needs.backend_gate.outputs.ready == 'true' }}
+    if: ${{ github.event_name != 'pull_request' && needs.detect_changes.outputs.frontend_changed == 'true' && needs.backend_gate.outputs.ready == 'true' }}
     outputs:
       static_web_app_url: ${{ steps.deploy.outputs.static_web_app_url }}
 
@@ -331,7 +354,7 @@ jobs:
     needs:
       - detect_changes
       - deploy_frontend
-    if: success() && github.event_name == 'push' && needs.detect_changes.outputs.frontend_changed == 'true'
+    if: success() && github.event_name != 'pull_request' && needs.detect_changes.outputs.frontend_changed == 'true'
 
     steps:
       - name: Verify frontend site is reachable
