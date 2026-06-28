@@ -17,6 +17,7 @@ public sealed class CorsInstaller : IFeatureInstaller
             options.AddPolicy(FrontendPolicyName, policy =>
             {
                 policy.WithOrigins(corsOptions.AllowedOrigins)
+                    .AllowCredentials()
                     .AllowAnyHeader()
                     .AllowAnyMethod();
             });

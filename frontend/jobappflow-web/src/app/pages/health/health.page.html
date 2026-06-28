@@ -1,23 +1,35 @@
-<main class="app-shell">
-  <section
-    class="app-panel"
-    [class.is-ok]="status() === 'healthy'"
-    [class.is-bad]="status() === 'unhealthy'"
-  >
-    <p class="app-eyebrow">JobAppFlow</p>
-    <h1 class="app-title">{{ title() }} health</h1>
+<main class="health-page">
+  <mat-card class="health-card">
+    <div class="health-header">
+      <p class="app-eyebrow">JobAppFlow</p>
+      <h1>Server health check</h1>
+    </div>
 
-    @if (status() === 'loading') {
-      <p class="app-status app-status--loading">Checking backend health...</p>
-    } @else if (status() === 'healthy') {
-      <p class="app-status app-status--ok">Online</p>
-    } @else {
-      <p class="app-status app-status--bad">Offline</p>
-    }
+    <mat-card-content>
+      <div
+        class="health-pill"
+        [class.is-healthy]="status() === 'healthy'"
+        [class.is-unhealthy]="status() === 'unhealthy'"
+        [class.is-loading]="status() === 'loading'"
+      >
+        <span class="health-pill__dot" aria-hidden="true"></span>
+        @if (status() === 'loading') {
+          <span>Checking server...</span>
+        } @else if (status() === 'healthy') {
+          <span>Server is online</span>
+        } @else {
+          <span>Server is unavailable</span>
+        }
+      </div>
 
-    <p class="app-copy">{{ details() }}</p>
-    <p class="app-meta" *ngIf="lastChecked()">Last checked: {{ lastChecked() }}</p>
+      <p class="health-copy">{{ details() }}</p>
+      @if (lastChecked()) {
+        <p class="health-meta">Last checked: {{ lastChecked() }}</p>
+      }
+    </mat-card-content>
 
-    <button type="button" class="app-button" (click)="refreshHealth()">Recheck</button>
-  </section>
+    <mat-card-actions align="end">
+      <button mat-stroked-button type="button" (click)="refreshHealth()">Recheck</button>
+    </mat-card-actions>
+  </mat-card>
 </main>

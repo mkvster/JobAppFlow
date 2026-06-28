@@ -1,0 +1,39 @@
+<main class="home-page">
+  <mat-toolbar class="home-toolbar">
+    <span class="home-brand">JobAppFlow</span>
+    <span class="home-spacer"></span>
+
+    <button mat-stroked-button [matMenuTriggerFor]="profileMenu" type="button">
+      <mat-icon>account_circle</mat-icon>
+      <span>{{ handle() }}</span>
+      <mat-icon>arrow_drop_down</mat-icon>
+    </button>
+
+    <mat-menu #profileMenu="matMenu">
+      <button mat-menu-item type="button" (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Logout</span>
+      </button>
+    </mat-menu>
+  </mat-toolbar>
+
+  <section class="home-content">
+    <mat-card class="home-card">
+      <mat-card-header>
+        <mat-card-title>Home</mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="home-status">
+          <div class="home-copy">
+            <p class="app-eyebrow">JobAppFlow</p>
+            <h1>Welcome back{{ user()?.userName ? ', ' + user()?.userName : '' }}.</h1>
+            <p>
+              You are logged in with the backend session and can continue your work in JobAppFlow.
+            </p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </section>
+</main>
