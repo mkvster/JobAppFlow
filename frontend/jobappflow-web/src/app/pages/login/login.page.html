@@ -1,0 +1,70 @@
+<main class="login-page">
+  <section class="login-hero">
+    <div class="login-copy">
+      <p class="app-eyebrow">JobAppFlow</p>
+      <h1>Sign in to your workspace</h1>
+      <p>
+        Use your email or username and password to access your job search dashboard.
+      </p>
+    </div>
+
+    <div class="login-panel">
+      @if (healthState() !== 'online') {
+        <div
+          class="login-health"
+          [class.is-offline]="healthState() === 'offline'"
+          [class.is-checking]="healthState() === 'checking'"
+        >
+          <span class="login-health__dot" aria-hidden="true"></span>
+          <span>{{ healthMessage() }}</span>
+        </div>
+      }
+
+      <mat-card class="login-card">
+        <mat-card-header>
+          <mat-card-title>Login</mat-card-title>
+        </mat-card-header>
+
+        <mat-card-content>
+          <form class="login-form" [formGroup]="form" (ngSubmit)="submit()">
+            <mat-form-field appearance="outline">
+              <mat-label>Email or username</mat-label>
+              <input matInput formControlName="emailOrUsername" autocomplete="username" />
+              <mat-icon matSuffix>person</mat-icon>
+              @if (form.controls.emailOrUsername.touched && form.controls.emailOrUsername.hasError('required')) {
+                <mat-error>Enter your email or username.</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Password</mat-label>
+              <input
+                matInput
+                formControlName="password"
+                type="password"
+                autocomplete="current-password"
+              />
+              <mat-icon matSuffix>lock</mat-icon>
+              @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+                <mat-error>Enter your password.</mat-error>
+              }
+            </mat-form-field>
+
+            @if (errorMessage()) {
+              <p class="login-error">{{ errorMessage() }}</p>
+            }
+
+            <button mat-flat-button color="primary" type="submit" [disabled]="isSubmitting() || !canSubmit()">
+              @if (isSubmitting()) {
+                <mat-spinner diameter="20"></mat-spinner>
+                <span>Signing in</span>
+              } @else {
+                <span>Log in</span>
+              }
+            </button>
+          </form>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </section>
+</main>

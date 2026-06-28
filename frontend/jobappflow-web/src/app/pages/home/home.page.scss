@@ -1,0 +1,93 @@
+:host {
+  display: block;
+}
+
+.home-page {
+  min-height: 100dvh;
+  background: #f6f8fc;
+}
+
+.home-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  gap: 12px;
+  padding: 14px 24px;
+  margin: 0;
+  border-radius: 0;
+  background: #fff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.home-brand {
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.home-spacer {
+  flex: 1;
+}
+
+.home-toolbar button {
+  border-radius: 999px;
+}
+
+.home-content {
+  padding: 32px;
+  display: grid;
+  place-items: center;
+}
+
+.home-card {
+  width: min(100%, 920px);
+  border-radius: 28px;
+}
+
+.home-status {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  padding: 8px 0 4px;
+}
+
+.home-badge {
+  align-self: start;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(76, 175, 80, 0.12);
+  color: #2e7d32;
+  border: 1px solid rgba(76, 175, 80, 0.2);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.home-copy h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  line-height: 1;
+}
+
+.home-copy p {
+  margin: 14px 0 0;
+  color: rgba(0, 0, 0, 0.62);
+  line-height: 1.6;
+  max-width: 54ch;
+}
+
+@media (max-width: 720px) {
+  .home-toolbar {
+    padding-inline: 16px;
+  }
+
+  .home-content {
+    padding: 16px;
+  }
+
+  .home-status {
+    grid-template-columns: 1fr;
+  }
+}

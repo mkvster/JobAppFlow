@@ -1,0 +1,139 @@
+:host {
+  display: block;
+}
+
+.login-page {
+  display: grid;
+  align-items: center;
+  padding: 32px;
+  min-height: 100dvh;
+  background: #f6f8fc;
+}
+
+.login-hero {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 28px;
+  align-items: center;
+}
+
+.login-copy {
+  max-width: 560px;
+}
+
+.login-copy h1 {
+  margin: 0;
+  font-size: clamp(2.6rem, 6vw, 5rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.login-copy p {
+  margin: 18px 0 0;
+  color: rgba(0, 0, 0, 0.62);
+  line-height: 1.6;
+  max-width: 44ch;
+}
+
+.login-panel {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  width: min(100%, 560px);
+}
+
+.login-card {
+  width: 100%;
+  border-radius: 28px;
+}
+
+.login-form {
+  display: grid;
+  gap: 16px;
+  padding-top: 8px;
+}
+
+.login-health {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  color: rgba(0, 0, 0, 0.7);
+  font-size: 0.92rem;
+  background: #fff;
+}
+
+.login-health__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #93a4be;
+  box-shadow: 0 0 0 6px rgba(147, 164, 190, 0.14);
+}
+
+.login-health.is-checking {
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.login-health.is-checking .login-health__dot {
+  background: #90a4ae;
+  box-shadow: 0 0 0 6px rgba(144, 164, 174, 0.14);
+}
+
+.login-health.is-online {
+  color: #1b5e20;
+}
+
+.login-health.is-online .login-health__dot {
+  background: #4caf50;
+  box-shadow: 0 0 0 6px rgba(76, 175, 80, 0.14);
+}
+
+.login-health.is-offline {
+  color: #b71c1c;
+}
+
+.login-health.is-offline .login-health__dot {
+  background: #f44336;
+  box-shadow: 0 0 0 6px rgba(244, 67, 54, 0.14);
+}
+
+.login-form mat-form-field {
+  width: 100%;
+}
+
+.login-form button {
+  min-height: 48px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.login-error {
+  margin: 0;
+  color: #b71c1c;
+  min-height: 1.5rem;
+}
+
+@media (max-width: 920px) {
+  .login-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .login-copy h1 {
+    font-size: clamp(2.2rem, 9vw, 4rem);
+  }
+
+  .login-panel {
+    width: 100%;
+  }
+}

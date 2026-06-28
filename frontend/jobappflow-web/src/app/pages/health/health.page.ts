@@ -1,14 +1,14 @@
-import { NgIf } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
 
-import { environment } from '../../../environments/environment';
 import { HealthService } from '../../services/health.service';
 
 type HealthState = 'loading' | 'healthy' | 'unhealthy';
 
 @Component({
   selector: 'app-health-page',
-  imports: [NgIf],
+  imports: [MatButtonModule, MatCardModule],
   templateUrl: './health.page.html',
   styleUrl: './health.page.scss'
 })
@@ -18,7 +18,7 @@ export class HealthPage {
   protected readonly title = signal('JobAppFlow');
   protected readonly healthUrl = this.healthService.healthUrl;
   protected readonly status = signal<HealthState>('loading');
-  protected readonly details = signal('Checking backend connection...');
+  protected readonly details = signal('Checking server...');
   protected readonly lastChecked = signal<string | null>(null);
 
   constructor() {
@@ -27,14 +27,14 @@ export class HealthPage {
 
   protected refreshHealth(): void {
     this.status.set('loading');
-    this.details.set(`Checking ${this.healthUrl} ...`);
+    this.details.set('Checking server...');
 
     this.healthService.checkHealth().subscribe((healthy) => {
       this.status.set(healthy ? 'healthy' : 'unhealthy');
       this.details.set(
         healthy
-          ? `Backend is reachable.`
-          : 'Backend health check failed. Check the API URL and confirm the server is running.'
+          ? 'Server is online.'
+          : 'Server is waking up or unavailable.'
       );
       this.lastChecked.set(new Date().toLocaleString());
     });

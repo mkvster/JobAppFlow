@@ -9,9 +9,10 @@ builder.Services.AddJobAppFlowSqlDataAccess(builder.Configuration);
 
 var features = new FeatureInstallerCollection(
     new CorsInstaller(),
-    new JwtAuthInstaller(),
+    new JwtInstaller(),
     new SwaggerInstaller(),
-    new ApplicationInsightsInstaller()
+    new ApplicationInsightsInstaller(),
+    new AuthInstaller()
 );
 
 features.ConfigureBuilder(builder);

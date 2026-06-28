@@ -9,23 +9,23 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace JobAppFlow.Api.Installers;
 
-public sealed class JwtAuthInstaller : IFeatureInstaller
+public sealed class JwtInstaller : IFeatureInstaller
 {
     private const string JwtConfigSectionName = "Jwt";
+    private const string JwtKeysConfigSectionName = "JwtKeys";
 
     public void ConfigureBuilder(IHostApplicationBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
 
         var jwtOptions = builder.Configuration.ReadSection<JwtOptions>(JwtConfigSectionName);
-        var jwtKeys = builder.Configuration.ReadSection<JwtKeys>("JwtKeys");
+        var jwtKeys = builder.Configuration.ReadSection<JwtKeys>(JwtKeysConfigSectionName);
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKeys.AccessKey));
 
         builder.Services.AddSingleton(jwtOptions);
         builder.Services.AddSingleton(jwtKeys);
         builder.Services.AddScoped<IAccessTokenGenerator, JwtAccessTokenGenerator>();
         builder.Services.AddScoped<IRefreshTokenJwtGenerator, JwtRefreshTokenGenerator>();
-        builder.Services.AddScoped<IAuthService, AuthService>();
 
         builder.Services
             .AddAuthentication(options =>

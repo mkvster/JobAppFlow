@@ -2,3 +2,88 @@
   display: block;
   min-height: 100dvh;
 }
+
+.health-page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #f6f8fc;
+}
+
+.health-card {
+  width: min(100%, 560px);
+}
+
+.health-header {
+  display: grid;
+  justify-items: start;
+  text-align: left;
+  padding: 16px 16px 0;
+}
+
+.health-header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.05;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.health-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 18px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.health-pill__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #90a4ae;
+  box-shadow: 0 0 0 6px rgba(144, 164, 174, 0.14);
+}
+
+.health-pill.is-loading {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.health-pill.is-loading .health-pill__dot {
+  background: #90a4ae;
+  box-shadow: 0 0 0 6px rgba(144, 164, 174, 0.14);
+}
+
+.health-pill.is-healthy {
+  color: #1b5e20;
+}
+
+.health-pill.is-healthy .health-pill__dot {
+  background: #4caf50;
+  box-shadow: 0 0 0 6px rgba(76, 175, 80, 0.14);
+}
+
+.health-pill.is-unhealthy {
+  color: #b71c1c;
+}
+
+.health-pill.is-unhealthy .health-pill__dot {
+  background: #f44336;
+  box-shadow: 0 0 0 6px rgba(244, 67, 54, 0.14);
+}
+
+.health-copy {
+  margin: 0 0 10px;
+  color: rgba(0, 0, 0, 0.72);
+  line-height: 1.6;
+}
+
+.health-meta {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.56);
+  font-size: 0.92rem;
+}

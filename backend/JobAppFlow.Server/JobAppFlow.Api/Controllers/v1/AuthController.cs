@@ -1,3 +1,5 @@
+using JobAppFlow.Api.Extensions;
+using JobAppFlow.Api.Logging;
 using JobAppFlow.Api.Models.Auth;
 using JobAppFlow.Api.Services.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -13,10 +15,17 @@ public sealed class AuthController : ControllerBase
     private const string CookiePath = "/api/v1/auth";
 
     private readonly IAuthService _authService;
+    private readonly ILoginAttemptProtectionService _loginAttemptProtectionService;
+    private readonly ILogger<AuthController> _logger;
 
-    public AuthController(IAuthService authService)
+    public AuthController(
+        IAuthService authService,
+        ILoginAttemptProtectionService loginAttemptProtectionService,
+        ILogger<AuthController> logger)
     {
         _authService = authService;
+        _loginAttemptProtectionService = loginAttemptProtectionService;
+        _logger = logger;
     }
 
     [AllowAnonymous]
@@ -27,6 +36,13 @@ public sealed class AuthController : ControllerBase
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        var loginKey = NormalizeLoginKey(request.EmailOrUsername);
+        var hasNoThrottle = await CheckNoThrottle(loginKey, cancellationToken);
+        if (!hasNoThrottle)
+        {
+            return new StatusCodeResult(StatusCodes.Status429TooManyRequests);
+        }
+
         var session = await _authService.LoginAsync(
             request.EmailOrUsername,
             request.Password,
@@ -34,11 +50,37 @@ public sealed class AuthController : ControllerBase
 
         if (session is null)
         {
-            return Unauthorized();
+            var failure = _loginAttemptProtectionService.RegisterFailure(loginKey);
+            _logger.LogLoginAttemptFailed(loginKey, HttpContext, failure);
+
+            await failure.WaitAsync(cancellationToken);
+
+            if (failure.IsLockedOut)
+            {
+                Response.SetRetryAfterHeader(failure.RetryAfter);
+                return new StatusCodeResult(StatusCodes.Status429TooManyRequests);
+            }
+            return new UnauthorizedResult();
         }
 
+        _loginAttemptProtectionService.RegisterSuccess(loginKey);
         SetRefreshTokenCookie(session);
         return Ok(new AuthSessionDto(session.AccessToken, session.User));
+    }
+
+    private async Task<bool> CheckNoThrottle(string loginKey, CancellationToken cancellationToken)
+    {
+        var attempt = _loginAttemptProtectionService.GetThrottle(loginKey);
+        if (attempt.IsLockedOut)
+        {
+            Response.SetRetryAfterHeader(attempt.RetryAfter);
+            _logger.LogLoginAttemptLockedOut(loginKey, HttpContext, attempt);
+            return false;
+        }
+
+        await attempt.WaitAsync(cancellationToken);
+
+        return true;
     }
 
     [AllowAnonymous]
@@ -90,7 +132,9 @@ public sealed class AuthController : ControllerBase
         {
             HttpOnly = true,
             Secure = Request.IsHttps,
-            SameSite = Request.IsHttps ? SameSiteMode.None : SameSiteMode.Lax,
+            SameSite = Request.IsHttps
+                ? Microsoft.AspNetCore.Http.SameSiteMode.None
+                : Microsoft.AspNetCore.Http.SameSiteMode.Lax,
             Expires = session.RefreshTokenExpiresAtUtc.UtcDateTime,
             Path = CookiePath
         };
@@ -109,5 +153,12 @@ public sealed class AuthController : ControllerBase
             {
                 Path = CookiePath
             });
+    }
+
+    private static string NormalizeLoginKey(string value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? string.Empty
+            : value.Trim().ToUpperInvariant();
     }
 }
