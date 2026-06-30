@@ -17,8 +17,10 @@ public sealed class AuthInstaller : IFeatureInstaller
     {
         ArgumentNullException.ThrowIfNull(builder);
         var authOptions = builder.Configuration.ReadSection<AuthOptions>(AuthConfigSectionName);
+        var demoOptions = builder.Configuration.ReadSection<DemoOptions>("Demo");
         
         builder.Services.AddSingleton(authOptions);
+        builder.Services.AddSingleton(demoOptions);
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddSingleton<ILoginAttemptProtectionService, InMemoryLoginAttemptProtectionService>();

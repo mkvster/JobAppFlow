@@ -1,8 +1,8 @@
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using JobAppFlow.Api.Models.Auth;
 using JobAppFlow.Api.Constants;
+using JobAppFlow.Api.Models.Auth;
 using JobAppFlow.Api.Models.Options;
 using JobAppFlow.SqlDataAccess.Models;
 using Microsoft.AspNetCore.Identity;
@@ -17,6 +17,8 @@ public sealed class AuthService : IAuthService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IAccessTokenGenerator _accessTokenGenerator;
     private readonly IRefreshTokenJwtGenerator _refreshTokenGenerator;
+    private readonly AuthOptions _authOptions;
+    private readonly DemoOptions _demoOptions;
     private readonly JwtOptions _jwtOptions;
     private readonly TokenValidationParameters _tokenValidationParameters;
 
@@ -24,12 +26,16 @@ public sealed class AuthService : IAuthService
         UserManager<ApplicationUser> userManager,
         IAccessTokenGenerator accessTokenGenerator,
         IRefreshTokenJwtGenerator refreshTokenGenerator,
+        AuthOptions authOptions,
+        DemoOptions demoOptions,
         JwtOptions jwtOptions,
         JwtKeys jwtKeys)
     {
         _userManager = userManager;
         _accessTokenGenerator = accessTokenGenerator;
         _refreshTokenGenerator = refreshTokenGenerator;
+        _authOptions = authOptions;
+        _demoOptions = demoOptions;
         _jwtOptions = jwtOptions;
         _tokenValidationParameters = CreateTokenValidationParameters(jwtOptions, jwtKeys);
     }
@@ -49,6 +55,31 @@ public sealed class AuthService : IAuthService
 
         var passwordValid = await _userManager.CheckPasswordAsync(user, password);
         if (!passwordValid)
+        {
+            return null;
+        }
+
+        return await IssueSessionAsync(user, cancellationToken);
+    }
+
+    public async Task<AuthSessionResult?> LoginDemoAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var demoLogin = _demoOptions.DemoUserLogin.Trim();
+        if (string.IsNullOrWhiteSpace(demoLogin))
+        {
+            return null;
+        }
+
+        var user = await FindUserAsync(demoLogin, cancellationToken);
+        if (user is null)
+        {
+            return null;
+        }
+
+        var isDemo = await _userManager.IsInRoleAsync(user, ApplicationRoleNames.Demo);
+        if (!isDemo)
         {
             return null;
         }
@@ -107,18 +138,34 @@ public sealed class AuthService : IAuthService
         return await _userManager.FindByIdAsync(userId.ToString());
     }
 
-    private Task<AuthSessionResult> IssueSessionAsync(ApplicationUser user, CancellationToken cancellationToken)
+    public async Task<string[]> GetCurrentUserRolesAsync(
+        ClaimsPrincipal principal,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await GetCurrentUserAsync(principal, cancellationToken);
+        if (user is null)
+        {
+            return Array.Empty<string>();
+        }
+
+        var roles = await _userManager.GetRolesAsync(user);
+        return roles.ToArray();
+    }
+
+    private async Task<AuthSessionResult> IssueSessionAsync(ApplicationUser user, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        var roles = await _userManager.GetRolesAsync(user);
+        var roleNames = roles.ToArray();
         var refreshToken = _refreshTokenGenerator.Generate(user);
         var refreshTokenExpiresAtUtc = DateTimeOffset.UtcNow.AddDays(_jwtOptions.RefreshTokenExpirationDays);
 
-        return Task.FromResult(new AuthSessionResult(
-            _accessTokenGenerator.Generate(user),
+        return new AuthSessionResult(
+            _accessTokenGenerator.Generate(user, roleNames),
             refreshToken,
             refreshTokenExpiresAtUtc,
-            new AuthUserDto(user.Id, user.UserName ?? string.Empty, user.Email)));
+            new AuthUserDto(user.Id, user.UserName ?? string.Empty, user.Email, roleNames));
     }
 
     private async Task<ApplicationUser?> FindUserAsync(string emailOrUsername, CancellationToken cancellationToken)

@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using JobAppFlow.Api.Extensions;
 using JobAppFlow.Api.Constants;
 using JobAppFlow.Api.Models.Options;
@@ -6,6 +6,7 @@ using JobAppFlow.Api.Services.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 
 namespace JobAppFlow.Api.Installers;
 
@@ -44,6 +45,7 @@ public sealed class JwtInstaller : IFeatureInstaller
                     ValidIssuer = jwtOptions.Issuer,
                     ValidAudience = jwtOptions.Audience,
                     IssuerSigningKey = signingKey,
+                    RoleClaimType = ClaimTypes.Role,
                     ClockSkew = TimeSpan.Zero
                 };
 

@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -10,7 +10,7 @@ public sealed class AuthEndpointTests
 {
     private sealed record LoginRequestPayload(string emailOrUsername, string password);
     private static readonly LoginRequestPayload LoginRequest = new("test-user", "Password123!");
-    
+
     private readonly IntegrationTestFixture _fixture;
 
     public AuthEndpointTests(IntegrationTestFixture fixture)
@@ -31,7 +31,24 @@ public sealed class AuthEndpointTests
 
         var payload = await ReadJsonAsync(response);
         Assert.Equal("test-user", payload.RootElement.GetProperty("user").GetProperty("userName").GetString());
+        Assert.Empty(payload.RootElement.GetProperty("user").GetProperty("roles").EnumerateArray());
         Assert.False(string.IsNullOrWhiteSpace(payload.RootElement.GetProperty("accessToken").GetString()));
+    }
+
+    [Fact]
+    public async Task DemoLogin_ReturnsDemoRole_AndSetsRefreshCookie()
+    {
+        using var client = _fixture.CreateClient();
+
+        var response = await client.PostAsync("/api/v1/auth/demo", null);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(response.Headers.TryGetValues("Set-Cookie", out var setCookieValues));
+        Assert.Contains(setCookieValues, value => value.Contains("jobappflow_refresh_token=", StringComparison.OrdinalIgnoreCase));
+
+        var payload = await ReadJsonAsync(response);
+        Assert.Equal("demo", payload.RootElement.GetProperty("user").GetProperty("userName").GetString());
+        Assert.Contains(payload.RootElement.GetProperty("user").GetProperty("roles").EnumerateArray(), value => value.GetString() == "Demo");
     }
 
     [Fact]
@@ -67,6 +84,7 @@ public sealed class AuthEndpointTests
         Assert.Equal(HttpStatusCode.OK, meResponse.StatusCode);
         var mePayload = await ReadJsonAsync(meResponse);
         Assert.Equal("test-user", mePayload.RootElement.GetProperty("userName").GetString());
+        Assert.Empty(mePayload.RootElement.GetProperty("roles").EnumerateArray());
     }
 
     [Fact]
