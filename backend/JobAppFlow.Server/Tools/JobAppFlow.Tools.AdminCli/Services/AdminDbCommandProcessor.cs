@@ -42,6 +42,38 @@ public sealed class AdminDbCommandProcessor : IAdminDbCommandProcessor
         WriteResult("unban-user", request.Login, result);
     }
 
+    public async Task AddRoleAsync(AddRoleRequest request, CancellationToken cancellationToken = default)
+    {
+        var result = await _userAdministrationService.AddRoleAsync(request.RoleName, cancellationToken);
+        WriteResult("add-role", request.RoleName, result);
+    }
+
+    public async Task RemoveRoleAsync(RemoveRoleRequest request, CancellationToken cancellationToken = default)
+    {
+        var result = await _userAdministrationService.RemoveRoleAsync(request.RoleName, cancellationToken);
+        WriteResult("remove-role", request.RoleName, result);
+    }
+
+    public async Task AddUserRoleAsync(AddUserRoleRequest request, CancellationToken cancellationToken = default)
+    {
+        var result = await _userAdministrationService.AddUserRoleAsync(
+            request.Login,
+            request.RoleName,
+            cancellationToken);
+
+        WriteResult("add-user-role", $"{request.Login}:{request.RoleName}", result);
+    }
+
+    public async Task RemoveUserRoleAsync(RemoveUserRoleRequest request, CancellationToken cancellationToken = default)
+    {
+        var result = await _userAdministrationService.RemoveUserRoleAsync(
+            request.Login,
+            request.RoleName,
+            cancellationToken);
+
+        WriteResult("remove-user-role", $"{request.Login}:{request.RoleName}", result);
+    }
+
     private static void WriteResult(string commandName, string login, IdentityResult result)
     {
         if (result.Succeeded)

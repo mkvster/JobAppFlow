@@ -63,6 +63,10 @@ public sealed class AdminCliApp
         dbCommand.Add(BuildRemoveUserCommand());
         dbCommand.Add(BuildBanUserCommand());
         dbCommand.Add(BuildUnbanUserCommand());
+        dbCommand.Add(BuildAddRoleCommand());
+        dbCommand.Add(BuildRemoveRoleCommand());
+        dbCommand.Add(BuildAddUserRoleCommand());
+        dbCommand.Add(BuildRemoveUserRoleCommand());
 
         return rootCommand;
     }
@@ -163,6 +167,106 @@ public sealed class AdminCliApp
             {
                 var login = parseResult.GetRequiredValue(loginOption);
                 await _processor.UnbanUserAsync(new UnbanUserRequest(login));
+            });
+        });
+
+        return command;
+    }
+
+    private Command BuildAddRoleCommand()
+    {
+        var command = new Command("add-role", "Create a new identity role.");
+        var roleArgument = new Argument<string>("role_name")
+        {
+            Description = "Role name.",
+        };
+
+        command.Add(roleArgument);
+        command.SetAction(async parseResult =>
+        {
+            return await ExecuteCommandAsync(async () =>
+            {
+                var roleName = parseResult.GetRequiredValue(roleArgument);
+                await _processor.AddRoleAsync(new AddRoleRequest(roleName));
+            });
+        });
+
+        return command;
+    }
+
+    private Command BuildRemoveRoleCommand()
+    {
+        var command = new Command("remove-role", "Remove an identity role.");
+        var roleArgument = new Argument<string>("role_name")
+        {
+            Description = "Role name.",
+        };
+
+        command.Add(roleArgument);
+        command.SetAction(async parseResult =>
+        {
+            return await ExecuteCommandAsync(async () =>
+            {
+                var roleName = parseResult.GetRequiredValue(roleArgument);
+                await _processor.RemoveRoleAsync(new RemoveRoleRequest(roleName));
+            });
+        });
+
+        return command;
+    }
+
+    private Command BuildAddUserRoleCommand()
+    {
+        var command = new Command("add-user-role", "Assign a role to an identity user.");
+        var loginOption = new Option<string>("--login", Array.Empty<string>())
+        {
+            Description = "User login.",
+            Required = true,
+        };
+        var roleOption = new Option<string>("--role", Array.Empty<string>())
+        {
+            Description = "Role name.",
+            Required = true,
+        };
+
+        command.Add(loginOption);
+        command.Add(roleOption);
+        command.SetAction(async parseResult =>
+        {
+            return await ExecuteCommandAsync(async () =>
+            {
+                var login = parseResult.GetRequiredValue(loginOption);
+                var roleName = parseResult.GetRequiredValue(roleOption);
+                await _processor.AddUserRoleAsync(new AddUserRoleRequest(login, roleName));
+            });
+        });
+
+        return command;
+    }
+
+    private Command BuildRemoveUserRoleCommand()
+    {
+        var command = new Command("remove-user-role", "Remove a role from an identity user.");
+        var loginOption = new Option<string>("--login", Array.Empty<string>())
+        {
+            Description = "User login.",
+            Required = true,
+        };
+        var roleOption = new Option<string>("--role", Array.Empty<string>())
+        {
+            Description = "Role name.",
+            Required = true,
+        };
+
+        command.Add(loginOption);
+        command.Add(roleOption);
+        command.SetAction(async parseResult =>
+        {
+            return await ExecuteCommandAsync(async () =>
+            {
+                var login = parseResult.GetRequiredValue(loginOption);
+                var roleName = parseResult.GetRequiredValue(roleOption);
+                await _processor.RemoveUserRoleAsync(new RemoveUserRoleRequest(login, roleName));
             });
         });
 

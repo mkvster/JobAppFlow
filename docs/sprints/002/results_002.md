@@ -1,7 +1,7 @@
 # Results of sprint 002
 
 ## Sprint status
-[o] In Progress
+[x] Done
 
 ## Tickets
 
@@ -11,16 +11,16 @@
 [x] `0010_azure-data-and-observability`
 [x] `0011_azure-sql-setup`
 [x] `0014_auth-model-foundation`
-[ ] `0015_auth-endpoints`
-[ ] `0016_login-ui`
+[x] `0015_auth-endpoints`
+[x] `0016_login-ui`
 
 ## Released
 
-[ ] Database and auth delivery:
+[x] Database and auth delivery:
 
 - [x] local and Azure identity tables setup;
 - [x] CLI admin tooling;
 - [x] backend database wiring;
-- [ ] auth model and endpoints;
-- [ ] login UI.
+- [x] auth model and endpoints;
+- [x] login UI.
 
