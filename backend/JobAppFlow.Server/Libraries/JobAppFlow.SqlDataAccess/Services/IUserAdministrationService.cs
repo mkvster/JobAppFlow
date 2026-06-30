@@ -1,4 +1,4 @@
-using JobAppFlow.SqlDataAccess.Models;
+﻿using JobAppFlow.SqlDataAccess.Models;
 using Microsoft.AspNetCore.Identity;
 
 namespace JobAppFlow.SqlDataAccess.Services;
@@ -21,5 +21,23 @@ public interface IUserAdministrationService
 
     Task<IdentityResult> UnbanUserAsync(
         string login,
+        CancellationToken cancellationToken = default);
+
+    Task<IdentityResult> AddRoleAsync(
+        string roleName,
+        CancellationToken cancellationToken = default);
+
+    Task<IdentityResult> RemoveRoleAsync(
+        string roleName,
+        CancellationToken cancellationToken = default);
+
+    Task<IdentityResult> AddUserRoleAsync(
+        string login,
+        string roleName,
+        CancellationToken cancellationToken = default);
+
+    Task<IdentityResult> RemoveUserRoleAsync(
+        string login,
+        string roleName,
         CancellationToken cancellationToken = default);
 }

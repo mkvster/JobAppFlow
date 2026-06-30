@@ -1,4 +1,4 @@
-using JobAppFlow.SqlDataAccess.Models;
+﻿using JobAppFlow.SqlDataAccess.Models;
 using Microsoft.AspNetCore.Identity;
 
 namespace JobAppFlow.SqlDataAccess.Services;
@@ -6,10 +6,14 @@ namespace JobAppFlow.SqlDataAccess.Services;
 public sealed class UserAdministrationService : IUserAdministrationService
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly RoleManager<ApplicationRole> _roleManager;
 
-    public UserAdministrationService(UserManager<ApplicationUser> userManager)
+    public UserAdministrationService(
+        UserManager<ApplicationUser> userManager,
+        RoleManager<ApplicationRole> roleManager)
     {
         _userManager = userManager;
+        _roleManager = roleManager;
     }
 
     public async Task<IdentityResult> AddUserAsync(
@@ -88,9 +92,116 @@ public sealed class UserAdministrationService : IUserAdministrationService
         return await _userManager.SetLockoutEndDateAsync(user, null);
     }
 
+    public async Task<IdentityResult> AddRoleAsync(
+        string roleName,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var normalizedRoleName = NormalizeRoleName(roleName);
+        if (string.IsNullOrWhiteSpace(normalizedRoleName))
+        {
+            return IdentityResult.Failed(CreateRoleNameInvalidError(roleName));
+        }
+
+        var role = await _roleManager.FindByNameAsync(normalizedRoleName);
+        if (role is not null)
+        {
+            return IdentityResult.Success;
+        }
+
+        return await _roleManager.CreateAsync(new ApplicationRole
+        {
+            Name = normalizedRoleName
+        });
+    }
+
+    public async Task<IdentityResult> RemoveRoleAsync(
+        string roleName,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var role = await FindRoleByNameAsync(roleName);
+        if (role is null)
+        {
+            return IdentityResult.Success;
+        }
+
+        return await _roleManager.DeleteAsync(role);
+    }
+
+    public async Task<IdentityResult> AddUserRoleAsync(
+        string login,
+        string roleName,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var user = await FindUserByLoginAsync(login);
+        if (user is null)
+        {
+            return IdentityResult.Failed(CreateUserNotFoundError(login));
+        }
+
+        var role = await FindRoleByNameAsync(roleName);
+        if (role is null)
+        {
+            return IdentityResult.Failed(CreateRoleNotFoundError(roleName));
+        }
+
+        var normalizedRoleName = NormalizeRoleName(role.Name ?? roleName);
+        if (await _userManager.IsInRoleAsync(user, normalizedRoleName))
+        {
+            return IdentityResult.Success;
+        }
+
+        return await _userManager.AddToRoleAsync(user, normalizedRoleName);
+    }
+
+    public async Task<IdentityResult> RemoveUserRoleAsync(
+        string login,
+        string roleName,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var user = await FindUserByLoginAsync(login);
+        if (user is null)
+        {
+            return IdentityResult.Failed(CreateUserNotFoundError(login));
+        }
+
+        var role = await FindRoleByNameAsync(roleName);
+        if (role is null)
+        {
+            return IdentityResult.Failed(CreateRoleNotFoundError(roleName));
+        }
+
+        var normalizedRoleName = NormalizeRoleName(role.Name ?? roleName);
+        if (!await _userManager.IsInRoleAsync(user, normalizedRoleName))
+        {
+            return IdentityResult.Success;
+        }
+
+        return await _userManager.RemoveFromRoleAsync(user, normalizedRoleName);
+    }
+
     private async Task<ApplicationUser?> FindUserByLoginAsync(string login)
     {
         return await _userManager.FindByNameAsync(login.Trim());
+    }
+
+    private async Task<ApplicationRole?> FindRoleByNameAsync(string roleName)
+    {
+        return await _roleManager.FindByNameAsync(NormalizeRoleName(roleName));
+    }
+
+    private static string NormalizeRoleName(string roleName)
+    {
+        return string.IsNullOrWhiteSpace(roleName)
+            ? string.Empty
+            : roleName.Trim();
     }
 
     private static IdentityError CreateUserNotFoundError(string login)
@@ -99,6 +210,24 @@ public sealed class UserAdministrationService : IUserAdministrationService
         {
             Code = "UserNotFound",
             Description = $"User '{login}' was not found.",
+        };
+    }
+
+    private static IdentityError CreateRoleNotFoundError(string roleName)
+    {
+        return new IdentityError
+        {
+            Code = "RoleNotFound",
+            Description = $"Role '{roleName}' was not found.",
+        };
+    }
+
+    private static IdentityError CreateRoleNameInvalidError(string roleName)
+    {
+        return new IdentityError
+        {
+            Code = "RoleNameInvalid",
+            Description = $"Role name '{roleName}' is invalid.",
         };
     }
 }

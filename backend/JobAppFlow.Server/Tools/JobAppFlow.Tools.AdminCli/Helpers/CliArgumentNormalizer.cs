@@ -8,6 +8,10 @@ internal static class CliArgumentNormalizer
         ["-remove-user"] = "remove-user",
         ["-ban-user"] = "ban-user",
         ["-unban-user"] = "unban-user",
+        ["-add-role"] = "add-role",
+        ["-remove-role"] = "remove-role",
+        ["-add-user-role"] = "add-user-role",
+        ["-remove-user-role"] = "remove-user-role",
         ["-help"] = "help",
         ["database"] = "db",
     };
@@ -17,6 +21,7 @@ internal static class CliArgumentNormalizer
         "-login",
         "-pwd",
         "-email",
+        "-role",
     };
 
     public static string[] Normalize(string[] args)
