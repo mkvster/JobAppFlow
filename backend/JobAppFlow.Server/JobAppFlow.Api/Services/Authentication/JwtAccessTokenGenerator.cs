@@ -1,4 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using JobAppFlow.Api.Constants;
 using JobAppFlow.Api.Models.Options;
@@ -13,9 +12,17 @@ public sealed class JwtAccessTokenGenerator : JwtTokenGeneratorBase, IAccessToke
     {
     }
 
-    public string Generate(ApplicationUser user)
+    public string Generate(ApplicationUser user, IEnumerable<string>? roles = null)
     {
-        var claims = CreateBaseClaims(user, JwtTokenTypes.Access);
+        var claims = CreateBaseClaims(user, JwtTokenTypes.Access).ToList();
+
+        if (roles is not null)
+        {
+            claims.AddRange(roles
+                .Where(role => !string.IsNullOrWhiteSpace(role))
+                .Select(role => new Claim(ClaimTypes.Role, role.Trim())));
+        }
+
         return GenerateToken(claims, DateTime.UtcNow.AddMinutes(JwtOptions.AccessTokenExpirationMinutes));
     }
 }

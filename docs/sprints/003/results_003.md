@@ -5,8 +5,8 @@
 
 ## Tickets
 
-[x] `0021_role-management-cli`
-
+[x] `0017_role-management-cli`
+[x] `0018_add-roles-to-jwt`
 
 ## Released
 
