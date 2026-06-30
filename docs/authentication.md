@@ -1,4 +1,4 @@
-# Authentication Design
+﻿# Authentication Design
 
 ## Purpose
 
@@ -16,7 +16,8 @@ The authentication design should support:
 * protected access to job application attachments;
 * compatibility with an Angular frontend hosted separately from the backend API;
 * compatibility with backend deployment to either Azure App Service or Azure Container Apps;
-* normal daily use without frequent manual re-login.
+* normal daily use without frequent manual re-login;
+* a demo sign-in flow that can authenticate a fixed showcase user without exposing their credentials.
 
 ## High-Level Approach
 
@@ -26,7 +27,9 @@ The Angular frontend will authenticate against the ASP.NET Core Web API.
 
 The API will issue JWT access tokens for API requests.
 
-Refresh tokens will be used to keep the user signed in.
+Refresh tokens will be used to keep the user signed in for normal accounts.
+
+Demo access can use the same auth pipeline but should still be treated as a separate role for authorization.
 
 ## Authentication Flow
 
@@ -38,6 +41,14 @@ The API validates credentials using ASP.NET Core Identity.
 
 If credentials are valid, the API returns a short-lived JWT access token and sets a refresh token in a secure HttpOnly cookie.
 
+### Demo Login
+
+The Angular login page can offer a demo mode.
+
+When demo mode is selected, the frontend calls a dedicated demo sign-in endpoint.
+
+The API logs the user in as the configured demo account, which must have the `Demo` role.
+
 ### Authenticated API Calls
 
 The Angular application sends the access token with API requests using the Authorization header.
@@ -47,6 +58,8 @@ Authorization: Bearer <access_token>
 ```
 
 All job, ingest, attachment, and settings endpoints require authentication.
+
+Role-sensitive endpoints can additionally require specific roles.
 
 ### Token Refresh
 
@@ -91,11 +104,11 @@ Refresh tokens should be stored server-side in hashed form and should support re
 
 Access token lifetime:
 
-* 10–15 minutes.
+* 10-15 minutes.
 
 Refresh token lifetime:
 
-* 7–14 days.
+* 7-14 days.
 
 These values may be adjusted later, but the MVP should avoid forcing frequent manual re-login during normal daily use.
 
@@ -180,6 +193,7 @@ Auth__RefreshTokenDays
 Auth__AllowedOrigins
 Auth__InitialOwnerEmail
 Auth__InitialOwnerPassword
+Auth__DemoUserLogin
 ```
 
 Sensitive values should be stored in Azure App Service Configuration, Azure Container Apps secrets, or later in Azure Key Vault.

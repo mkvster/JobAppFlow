@@ -1,4 +1,4 @@
-using JobAppFlow.Api.Extensions;
+﻿using JobAppFlow.Api.Extensions;
 using JobAppFlow.Api.Logging;
 using JobAppFlow.Api.Models.Auth;
 using JobAppFlow.Api.Services.Authentication;
@@ -60,10 +60,25 @@ public sealed class AuthController : ControllerBase
                 Response.SetRetryAfterHeader(failure.RetryAfter);
                 return new StatusCodeResult(StatusCodes.Status429TooManyRequests);
             }
+
             return new UnauthorizedResult();
         }
 
         _loginAttemptProtectionService.RegisterSuccess(loginKey);
+        SetRefreshTokenCookie(session);
+        return Ok(new AuthSessionDto(session.AccessToken, session.User));
+    }
+
+    [AllowAnonymous]
+    [HttpPost("demo")]
+    public async Task<ActionResult<AuthSessionDto>> Demo(CancellationToken cancellationToken)
+    {
+        var session = await _authService.LoginDemoAsync(cancellationToken);
+        if (session is null)
+        {
+            return Unauthorized();
+        }
+
         SetRefreshTokenCookie(session);
         return Ok(new AuthSessionDto(session.AccessToken, session.User));
     }
@@ -123,7 +138,8 @@ public sealed class AuthController : ControllerBase
             return Unauthorized();
         }
 
-        return Ok(new AuthUserDto(user.Id, user.UserName ?? string.Empty, user.Email));
+        var roles = await _authService.GetCurrentUserRolesAsync(User, cancellationToken);
+        return Ok(new AuthUserDto(user.Id, user.UserName ?? string.Empty, user.Email, roles));
     }
 
     private void SetRefreshTokenCookie(AuthSessionResult session)
