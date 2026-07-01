@@ -34,6 +34,7 @@ export class LoginPage {
   private readonly router = inject(Router);
 
   protected readonly isSubmitting = signal(false);
+  protected readonly isSubmittingDemo = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly healthState = signal<HealthState>('checking');
   protected readonly healthMessage = computed(() => {
@@ -66,7 +67,7 @@ export class LoginPage {
   }
 
   protected async submit(): Promise<void> {
-    if (this.form.invalid || this.isSubmitting()) {
+    if (this.form.invalid || this.isSubmitting() || this.isSubmittingDemo()) {
       this.form.markAllAsTouched();
       return;
     }
@@ -84,6 +85,24 @@ export class LoginPage {
       this.errorMessage.set('Login failed. Check your credentials and try again.');
     } finally {
       this.isSubmitting.set(false);
+    }
+  }
+
+  protected async submitDemo(): Promise<void> {
+    if (this.isSubmitting() || this.isSubmittingDemo()) {
+      return;
+    }
+
+    this.isSubmittingDemo.set(true);
+    this.errorMessage.set(null);
+
+    try {
+      await this.authState.loginDemo();
+      await this.router.navigate(['/home']);
+    } catch {
+      this.errorMessage.set('Demo sign-in failed. Please try again.');
+    } finally {
+      this.isSubmittingDemo.set(false);
     }
   }
 }

@@ -25,6 +25,18 @@
   letter-spacing: 0.02em;
 }
 
+.home-demo-badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 152, 0, 0.14);
+  color: #e65100;
+  border: 1px solid rgba(255, 152, 0, 0.28);
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .home-spacer {
   flex: 1;
 }

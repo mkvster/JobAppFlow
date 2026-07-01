@@ -19,6 +19,7 @@ export class AuthStateService {
   readonly user = this.userSignal.asReadonly();
   readonly accessToken = this.accessTokenSignal.asReadonly();
   readonly isAuthenticated = computed(() => this.userSignal() !== null && this.accessTokenSignal() !== null);
+  readonly isDemo = computed(() => this.userSignal()?.roles.includes('Demo') ?? false);
   readonly isInitialized = this.initializedSignal.asReadonly();
   readonly isInitializing = this.initializingSignal.asReadonly();
   readonly isLoggingOut = this.loggingOutSignal.asReadonly();
@@ -34,6 +35,13 @@ export class AuthStateService {
 
   async login(request: LoginRequest): Promise<AuthSession> {
     const session = await firstValueFrom(this.api.login(request));
+    this.setSession(session);
+    this.initializedSignal.set(true);
+    return session;
+  }
+
+  async loginDemo(): Promise<AuthSession> {
+    const session = await firstValueFrom(this.api.demo());
     this.setSession(session);
     this.initializedSignal.set(true);
     return session;

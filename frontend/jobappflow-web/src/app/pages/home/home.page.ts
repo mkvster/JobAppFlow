@@ -25,6 +25,7 @@ export class HomePage {
   private readonly router = inject(Router);
 
   protected readonly user = this.authState.user;
+  protected readonly isDemo = this.authState.isDemo;
   protected readonly handle = computed(() => {
     const user = this.authState.user();
     if (!user) {

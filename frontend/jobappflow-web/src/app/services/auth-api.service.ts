@@ -19,6 +19,13 @@ export class AuthApiService {
     });
   }
 
+  demo() {
+    return this.http.post<AuthSession>(`${this.authUrl}/demo`, null, {
+      withCredentials: true,
+      context: new HttpContext().set(SKIP_AUTH_INTERCEPTOR, true)
+    });
+  }
+
   refresh() {
     return this.http.post<AuthSession>(`${this.authUrl}/refresh`, null, {
       withCredentials: true,
