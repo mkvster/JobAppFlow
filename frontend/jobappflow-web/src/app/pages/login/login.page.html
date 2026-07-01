@@ -54,12 +54,36 @@
               <p class="login-error">{{ errorMessage() }}</p>
             }
 
-            <button mat-flat-button color="primary" type="submit" [disabled]="isSubmitting() || !canSubmit()">
+            <button
+              mat-flat-button
+              color="primary"
+              type="submit"
+              [disabled]="isSubmitting() || isSubmittingDemo() || !canSubmit()"
+            >
               @if (isSubmitting()) {
                 <mat-spinner diameter="20"></mat-spinner>
                 <span>Signing in</span>
               } @else {
                 <span>Log in</span>
+              }
+            </button>
+
+            <div class="login-divider"><span>or</span></div>
+
+            <button
+              mat-stroked-button
+              type="button"
+              [disabled]="isSubmitting() || isSubmittingDemo() || !canSubmit()"
+              (click)="submitDemo()"
+            >
+              @if (isSubmittingDemo()) {
+                <mat-spinner diameter="20"></mat-spinner>
+                <span>Signing in</span>
+              } @else {
+                <span class="login-demo-content">
+                  <mat-icon>visibility</mat-icon>
+                  <span>Continue with demo account</span>
+                </span>
               }
             </button>
           </form>

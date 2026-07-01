@@ -1,6 +1,9 @@
 <main class="home-page">
   <mat-toolbar class="home-toolbar">
     <span class="home-brand">JobAppFlow</span>
+    @if (isDemo()) {
+      <span class="home-demo-badge">Demo mode</span>
+    }
     <span class="home-spacer"></span>
 
     <button mat-stroked-button [matMenuTriggerFor]="profileMenu" type="button">
